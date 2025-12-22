@@ -20,11 +20,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mateusflorez/portwatcher.git"
+    "url": "git+https://github.com/mateusflorez/portwatcher-tui.git"
   },
-  "homepage": "https://github.com/mateusflorez/portwatcher#readme",
+  "homepage": "https://github.com/mateusflorez/portwatcher-tui#readme",
   "bugs": {
-    "url": "https://github.com/mateusflorez/portwatcher/issues"
+    "url": "https://github.com/mateusflorez/portwatcher-tui/issues"
   },
   "author": "Mateus Paz <bomberatox@gmail.com>",
   "license": "MIT",

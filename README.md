@@ -1,6 +1,7 @@
 # PortWatcher
 
 [![npm version](https://img.shields.io/npm/v/portwatcher.svg)](https://www.npmjs.com/package/portwatcher)
+[![GitHub](https://img.shields.io/github/stars/mateusflorez/portwatcher-tui?style=social)](https://github.com/mateusflorez/portwatcher-tui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A terminal UI for monitoring and managing active ports on Linux systems.
