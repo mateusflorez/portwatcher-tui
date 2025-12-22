@@ -1,0 +1,16 @@
+{
+  "name": "portwatcher",
+  "version": "1.0.0",
+  "description": "TUI para monitorar e gerenciar portas ativas no sistema",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.2.1",
+    "chalk": "^5.3.0",
+    "ora": "^8.1.0",
+    "cli-table3": "^0.6.5"
+  }
+}
