@@ -1,6 +1,9 @@
 # PortWatcher
 
-TUI para monitorar e gerenciar portas ativas no sistema Linux.
+[![npm version](https://img.shields.io/npm/v/portwatcher.svg)](https://www.npmjs.com/package/portwatcher)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A terminal UI for monitoring and managing active ports on Linux systems.
 
 ```
   ╔══════════════════════════════════════════════════════════════════╗
@@ -12,52 +15,37 @@ TUI para monitorar e gerenciar portas ativas no sistema Linux.
   ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-## Funcionalidades
+## Features
 
-- **Listar portas ativas** - Exibe todas as portas TCP/UDP em escuta
-- **Matar processo por porta** - Encerra processos usando uma porta específica
-- **Monitor em tempo real** - Atualização automática a cada 2 segundos
+- **List active ports** - Display all listening TCP/UDP ports
+- **Kill process by port** - Terminate processes using a specific port
+- **Real-time monitor** - Auto-refresh every 2 seconds
 
-## Requisitos
+## Installation
+
+```bash
+npm install -g portwatcher
+```
+
+## Usage
+
+```bash
+portwatcher
+```
+
+### Permissions
+
+To see all processes and kill privileged ports (< 1024), run with `sudo`:
+
+```bash
+sudo portwatcher
+```
+
+## Requirements
 
 - Node.js 18+
-- Linux (usa `ss`, `netstat`, `lsof`, `fuser`)
+- Linux (uses `ss`, `netstat`, `lsof`, `fuser`)
 
-## Instalacao
-
-```bash
-npm install
-```
-
-## Uso
-
-```bash
-npm start
-```
-
-Ou diretamente:
-
-```bash
-node index.js
-```
-
-### Permissoes
-
-Para ver todos os processos e encerrar portas privilegiadas (< 1024), execute com `sudo`:
-
-```bash
-sudo node index.js
-```
-
-## Dependencias
-
-| Pacote | Descricao |
-|--------|-----------|
-| chalk | Cores no terminal |
-| @inquirer/prompts | Menus interativos |
-| cli-table3 | Tabelas formatadas |
-| ora | Spinners de loading |
-
-## Licenca
+## License
 
 MIT

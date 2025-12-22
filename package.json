@@ -1,12 +1,45 @@
 {
   "name": "portwatcher",
   "version": "1.0.0",
-  "description": "TUI para monitorar e gerenciar portas ativas no sistema",
+  "description": "Terminal UI for monitoring and managing active ports on Linux",
   "main": "index.js",
   "type": "module",
+  "bin": {
+    "portwatcher": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "port-scanner.js",
+    "spinner.js"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mateusflorez/portwatcher.git"
+  },
+  "homepage": "https://github.com/mateusflorez/portwatcher#readme",
+  "bugs": {
+    "url": "https://github.com/mateusflorez/portwatcher/issues"
+  },
+  "author": "Mateus Paz <bomberatox@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "port",
+    "ports",
+    "monitor",
+    "network",
+    "process",
+    "kill",
+    "tui",
+    "cli",
+    "linux",
+    "terminal"
+  ],
   "dependencies": {
     "@inquirer/prompts": "^7.2.1",
     "chalk": "^5.3.0",

@@ -4,32 +4,32 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 /**
- * Lista todas as portas TCP/UDP em escuta
+ * Lists all listening TCP/UDP ports
  * @returns {Promise<Array<{protocol: string, port: string, pid: string, process: string, address: string}>>}
  */
 export async function listarPortas() {
   try {
-    // Usando ss (socket statistics) - mais moderno que netstat
+    // Using ss (socket statistics) - more modern than netstat
     const { stdout } = await execAsync("ss -tulnp 2>/dev/null || netstat -tulnp 2>/dev/null");
 
-    const linhas = stdout.split("\n").filter(Boolean);
-    const portas = [];
+    const lines = stdout.split("\n").filter(Boolean);
+    const ports = [];
 
-    for (const linha of linhas) {
-      // Pula header
-      if (linha.includes("State") || linha.includes("Proto") || linha.includes("Netid")) {
+    for (const line of lines) {
+      // Skip header
+      if (line.includes("State") || line.includes("Proto") || line.includes("Netid")) {
         continue;
       }
 
-      const parsed = parseLinhaSS(linha) || parseLinhaNetstat(linha);
+      const parsed = parseSSLine(line) || parseNetstatLine(line);
       if (parsed && parsed.port) {
-        portas.push(parsed);
+        ports.push(parsed);
       }
     }
 
-    // Remove duplicatas por porta
+    // Remove duplicates by port
     const seen = new Set();
-    return portas.filter(p => {
+    return ports.filter(p => {
       const key = `${p.protocol}:${p.port}`;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -37,16 +37,16 @@ export async function listarPortas() {
     }).sort((a, b) => parseInt(a.port) - parseInt(b.port));
 
   } catch (error) {
-    throw new Error(`Falha ao listar portas: ${error.message}`);
+    throw new Error(`Failed to list ports: ${error.message}`);
   }
 }
 
 /**
- * Parse linha do comando ss
+ * Parse ss command output line
  */
-function parseLinhaSS(linha) {
-  // Formato ss: tcp   LISTEN  0  128  0.0.0.0:3000  0.0.0.0:*  users:(("node",pid=1234,fd=21))
-  const match = linha.match(/^(tcp|udp)\s+\w+\s+\d+\s+\d+\s+(\S+):(\d+)\s+\S+\s*(.*)$/);
+function parseSSLine(line) {
+  // ss format: tcp   LISTEN  0  128  0.0.0.0:3000  0.0.0.0:*  users:(("node",pid=1234,fd=21))
+  const match = line.match(/^(tcp|udp)\s+\w+\s+\d+\s+\d+\s+(\S+):(\d+)\s+\S+\s*(.*)$/);
 
   if (match) {
     const [, protocol, address, port, extras] = match;
@@ -66,11 +66,11 @@ function parseLinhaSS(linha) {
 }
 
 /**
- * Parse linha do comando netstat
+ * Parse netstat command output line
  */
-function parseLinhaNetstat(linha) {
-  // Formato netstat: tcp  0  0  0.0.0.0:3000  0.0.0.0:*  LISTEN  1234/node
-  const match = linha.match(/^(tcp|udp)\d?\s+\d+\s+\d+\s+(\S+):(\d+)\s+\S+\s+\w*\s*(\d+)?\/?([\w-]*)?/);
+function parseNetstatLine(line) {
+  // netstat format: tcp  0  0  0.0.0.0:3000  0.0.0.0:*  LISTEN  1234/node
+  const match = line.match(/^(tcp|udp)\d?\s+\d+\s+\d+\s+(\S+):(\d+)\s+\S+\s+\w*\s*(\d+)?\/?([\w-]*)?/);
 
   if (match) {
     const [, protocol, address, port, pid, process] = match;
@@ -88,46 +88,46 @@ function parseLinhaNetstat(linha) {
 }
 
 /**
- * Mata um processo pela porta
- * @param {string} port - Porta a ser liberada
+ * Kills a process by port
+ * @param {string} port - Port to be released
  * @returns {Promise<{success: boolean, message: string}>}
  */
 export async function matarPorta(port) {
   try {
-    // Primeiro, encontra o PID do processo usando a porta
+    // First, find the PID of the process using the port
     const { stdout } = await execAsync(`lsof -t -i:${port} 2>/dev/null || fuser ${port}/tcp 2>/dev/null`);
 
     const pids = stdout.trim().split(/\s+/).filter(Boolean);
 
     if (pids.length === 0) {
-      return { success: false, message: `Nenhum processo encontrado na porta ${port}` };
+      return { success: false, message: `No process found on port ${port}` };
     }
 
-    // Mata todos os processos encontrados
+    // Kill all found processes
     for (const pid of pids) {
       await execAsync(`kill -9 ${pid}`);
     }
 
     return {
       success: true,
-      message: `Porta ${port} liberada com sucesso (PID: ${pids.join(", ")})`
+      message: `Port ${port} released successfully (PID: ${pids.join(", ")})`
     };
 
   } catch (error) {
-    // Tenta com sudo se falhar
+    // Try with sudo if failed
     if (error.message.includes("permission") || error.message.includes("Operation not permitted")) {
       return {
         success: false,
-        message: `Sem permissao para matar processo na porta ${port}. Tente executar com sudo.`
+        message: `No permission to kill process on port ${port}. Try running with sudo.`
       };
     }
 
-    return { success: false, message: `Erro ao liberar porta: ${error.message}` };
+    return { success: false, message: `Error releasing port: ${error.message}` };
   }
 }
 
 /**
- * Obtém informações detalhadas de um processo pelo PID
+ * Gets detailed process information by PID
  */
 export async function infoProcesso(pid) {
   try {

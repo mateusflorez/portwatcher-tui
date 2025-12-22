@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import chalk from "chalk";
 import { select, confirm } from "@inquirer/prompts";
 import Table from "cli-table3";
@@ -23,50 +25,50 @@ const ASCII_ART = `
        ${chalk.hex("#FFE66D")("◉")} ${chalk.gray("TCP")}    ${chalk.hex("#4ECDC4")("◉")} ${chalk.gray("UDP")}    ${chalk.hex("#FF6B6B")("◉")} ${chalk.gray("KILL")}    ${chalk.hex("#96CEB4")("◉")} ${chalk.gray("REFRESH")}
 `;
 
-const MENU_PRINCIPAL = [
+const MAIN_MENU = [
   {
-    name: chalk.hex("#4ECDC4")("  Listar portas ativas"),
-    value: "listar",
-    description: "Exibe todas as portas TCP/UDP em escuta"
+    name: chalk.hex("#4ECDC4")("  List active ports"),
+    value: "list",
+    description: "Display all listening TCP/UDP ports"
   },
   {
-    name: chalk.hex("#FF6B6B")("  Matar processo por porta"),
-    value: "matar",
-    description: "Encerra um processo que esta usando uma porta especifica"
+    name: chalk.hex("#FF6B6B")("  Kill process by port"),
+    value: "kill",
+    description: "Terminate a process using a specific port"
   },
   {
-    name: chalk.hex("#FFE66D")("  Refresh automatico"),
-    value: "refresh",
-    description: "Monitora portas em tempo real"
+    name: chalk.hex("#FFE66D")("  Real-time monitor"),
+    value: "monitor",
+    description: "Monitor ports in real-time"
   },
   {
-    name: chalk.red("  Sair"),
-    value: "sair",
-    description: "Encerra o programa"
+    name: chalk.red("  Exit"),
+    value: "exit",
+    description: "Close the program"
   },
 ];
 
-function exibirHeader() {
+function displayHeader() {
   console.clear();
   console.log(ASCII_ART);
   console.log(chalk.gray("─".repeat(75)));
   console.log(
     chalk.white.bold("  PortWatcher ") +
     chalk.hex("#96CEB4")("v1.0.0") +
-    chalk.gray("  |  Monitor de Portas do Sistema")
+    chalk.gray("  |  System Port Monitor")
   );
   console.log(chalk.gray("─".repeat(75)));
   console.log();
 }
 
-function criarTabelaPortas(portas) {
+function createPortsTable(ports) {
   const table = new Table({
     head: [
       chalk.hex("#FFE66D").bold("PROTO"),
-      chalk.hex("#FFE66D").bold("PORTA"),
-      chalk.hex("#FFE66D").bold("ENDERECO"),
+      chalk.hex("#FFE66D").bold("PORT"),
+      chalk.hex("#FFE66D").bold("ADDRESS"),
       chalk.hex("#FFE66D").bold("PID"),
-      chalk.hex("#FFE66D").bold("PROCESSO")
+      chalk.hex("#FFE66D").bold("PROCESS")
     ],
     style: {
       head: [],
@@ -80,44 +82,44 @@ function criarTabelaPortas(portas) {
     }
   });
 
-  for (const porta of portas) {
-    const protoColor = porta.protocol === "TCP" ? chalk.hex("#4ECDC4") : chalk.hex("#96CEB4");
-    const portColor = parseInt(porta.port) < 1024 ? chalk.hex("#FF6B6B") : chalk.white;
+  for (const port of ports) {
+    const protoColor = port.protocol === "TCP" ? chalk.hex("#4ECDC4") : chalk.hex("#96CEB4");
+    const portColor = parseInt(port.port) < 1024 ? chalk.hex("#FF6B6B") : chalk.white;
 
     table.push([
-      protoColor(porta.protocol),
-      portColor(porta.port),
-      chalk.gray(porta.address),
-      chalk.hex("#45B7D1")(porta.pid),
-      chalk.white(porta.process.substring(0, 20))
+      protoColor(port.protocol),
+      portColor(port.port),
+      chalk.gray(port.address),
+      chalk.hex("#45B7D1")(port.pid),
+      chalk.white(port.process.substring(0, 20))
     ]);
   }
 
   return table;
 }
 
-async function exibirListaPortas() {
-  const spinner = criarSpinner("Escaneando portas...");
+async function displayPortsList() {
+  const spinner = criarSpinner("Scanning ports...");
   spinner.start();
 
   try {
-    const portas = await listarPortas();
+    const ports = await listarPortas();
     spinner.stop();
 
-    if (portas.length === 0) {
-      console.log(chalk.yellow("\n  Nenhuma porta em escuta encontrada.\n"));
+    if (ports.length === 0) {
+      console.log(chalk.yellow("\n  No listening ports found.\n"));
       return;
     }
 
-    console.log(chalk.hex("#4ECDC4")(`\n  Encontradas ${chalk.bold(portas.length)} portas ativas:\n`));
+    console.log(chalk.hex("#4ECDC4")(`\n  Found ${chalk.bold(ports.length)} active ports:\n`));
 
-    const tabela = criarTabelaPortas(portas);
-    console.log(tabela.toString());
+    const table = createPortsTable(ports);
+    console.log(table.toString());
 
-    // Legenda
+    // Legend
     console.log();
-    console.log(chalk.gray("  Legenda: ") +
-      chalk.hex("#FF6B6B")("porta < 1024 (privilegiada)") +
+    console.log(chalk.gray("  Legend: ") +
+      chalk.hex("#FF6B6B")("port < 1024 (privileged)") +
       chalk.gray(" | ") +
       chalk.hex("#4ECDC4")("TCP") +
       chalk.gray(" | ") +
@@ -125,150 +127,150 @@ async function exibirListaPortas() {
     );
 
   } catch (error) {
-    spinner.fail(chalk.red("Erro ao escanear portas"));
+    spinner.fail(chalk.red("Error scanning ports"));
     console.log(chalk.red(`  ${error.message}`));
   }
 }
 
-async function menuMatarPorta() {
-  const spinner = criarSpinner("Carregando portas...");
+async function killPortMenu() {
+  const spinner = criarSpinner("Loading ports...");
   spinner.start();
 
   try {
-    const portas = await listarPortas();
+    const ports = await listarPortas();
     spinner.stop();
 
-    if (portas.length === 0) {
-      console.log(chalk.yellow("\n  Nenhuma porta ativa para encerrar.\n"));
+    if (ports.length === 0) {
+      console.log(chalk.yellow("\n  No active ports to terminate.\n"));
       return;
     }
 
-    const opcoes = portas.map(p => ({
+    const options = ports.map(p => ({
       name: `${chalk.hex("#4ECDC4")(p.protocol.padEnd(4))} ${chalk.white(`:${p.port}`.padEnd(8))} ${chalk.gray("-")} ${chalk.hex("#96CEB4")(p.process)} ${chalk.gray(`(PID: ${p.pid})`)}`,
       value: p,
-      description: `Endereco: ${p.address}`
+      description: `Address: ${p.address}`
     }));
 
-    opcoes.push({
-      name: chalk.gray("  Voltar ao menu"),
+    options.push({
+      name: chalk.gray("  Back to menu"),
       value: null,
-      description: "Retorna ao menu principal"
+      description: "Return to main menu"
     });
 
-    const portaSelecionada = await select({
-      message: chalk.hex("#FF6B6B")("Selecione a porta para encerrar:"),
-      choices: opcoes,
+    const selectedPort = await select({
+      message: chalk.hex("#FF6B6B")("Select port to terminate:"),
+      choices: options,
       pageSize: 15
     });
 
-    if (!portaSelecionada) return;
+    if (!selectedPort) return;
 
-    // Mostra info detalhada do processo
-    const info = await infoProcesso(portaSelecionada.pid);
+    // Show detailed process info
+    const info = await infoProcesso(selectedPort.pid);
     if (info) {
       console.log();
-      console.log(chalk.gray("  ┌─ Detalhes do Processo ────────────────────────────────────────"));
+      console.log(chalk.gray("  ┌─ Process Details ──────────────────────────────────────────────"));
       console.log(chalk.gray("  │ ") + chalk.hex("#FFE66D")("PID:     ") + chalk.white(info.pid));
-      console.log(chalk.gray("  │ ") + chalk.hex("#FFE66D")("Usuario: ") + chalk.white(info.user));
-      console.log(chalk.gray("  │ ") + chalk.hex("#FFE66D")("Comando: ") + chalk.white(info.cmd.substring(0, 50)));
+      console.log(chalk.gray("  │ ") + chalk.hex("#FFE66D")("User:    ") + chalk.white(info.user));
+      console.log(chalk.gray("  │ ") + chalk.hex("#FFE66D")("Command: ") + chalk.white(info.cmd.substring(0, 50)));
       console.log(chalk.gray("  └──────────────────────────────────────────────────────────────"));
       console.log();
     }
 
-    const confirma = await confirm({
-      message: chalk.hex("#FF6B6B")(`Tem certeza que deseja matar o processo na porta ${portaSelecionada.port}?`),
+    const confirmed = await confirm({
+      message: chalk.hex("#FF6B6B")(`Are you sure you want to kill the process on port ${selectedPort.port}?`),
       default: false
     });
 
-    if (confirma) {
-      const spinnerKill = criarSpinner(`Encerrando processo na porta ${portaSelecionada.port}...`);
+    if (confirmed) {
+      const spinnerKill = criarSpinner(`Terminating process on port ${selectedPort.port}...`);
       spinnerKill.start();
 
-      const resultado = await matarPorta(portaSelecionada.port);
+      const result = await matarPorta(selectedPort.port);
 
-      if (resultado.success) {
-        spinnerKill.succeed(chalk.green(resultado.message));
+      if (result.success) {
+        spinnerKill.succeed(chalk.green(result.message));
       } else {
-        spinnerKill.fail(chalk.red(resultado.message));
+        spinnerKill.fail(chalk.red(result.message));
       }
     } else {
-      console.log(chalk.gray("\n  Operacao cancelada.\n"));
+      console.log(chalk.gray("\n  Operation cancelled.\n"));
     }
 
   } catch (error) {
     spinner.stop();
     if (error.name !== "ExitPromptError") {
-      console.log(chalk.red(`\n  Erro: ${error.message}\n`));
+      console.log(chalk.red(`\n  Error: ${error.message}\n`));
     }
   }
 }
 
-async function monitorRefresh() {
-  console.log(chalk.hex("#FFE66D")("\n  Modo monitor ativado. Pressione Ctrl+C para sair.\n"));
+async function monitorMode() {
+  console.log(chalk.hex("#FFE66D")("\n  Monitor mode activated. Press Ctrl+C to exit.\n"));
 
-  const intervalo = setInterval(async () => {
+  const interval = setInterval(async () => {
     console.clear();
-    exibirHeader();
-    console.log(chalk.hex("#FFE66D").bold("  MODO MONITOR") + chalk.gray(" (atualiza a cada 2s) | Ctrl+C para sair\n"));
+    displayHeader();
+    console.log(chalk.hex("#FFE66D").bold("  MONITOR MODE") + chalk.gray(" (updates every 2s) | Ctrl+C to exit\n"));
 
     try {
-      const portas = await listarPortas();
-      const tabela = criarTabelaPortas(portas);
-      console.log(tabela.toString());
-      console.log(chalk.gray(`\n  Ultima atualizacao: ${new Date().toLocaleTimeString()}`));
+      const ports = await listarPortas();
+      const table = createPortsTable(ports);
+      console.log(table.toString());
+      console.log(chalk.gray(`\n  Last update: ${new Date().toLocaleTimeString()}`));
     } catch (error) {
-      console.log(chalk.red(`  Erro: ${error.message}`));
+      console.log(chalk.red(`  Error: ${error.message}`));
     }
   }, 2000);
 
-  // Aguarda Ctrl+C
+  // Wait for Ctrl+C
   await new Promise((resolve) => {
     process.on("SIGINT", () => {
-      clearInterval(intervalo);
+      clearInterval(interval);
       resolve();
     });
   });
 }
 
 async function main() {
-  let rodando = true;
+  let running = true;
 
-  while (rodando) {
-    exibirHeader();
+  while (running) {
+    displayHeader();
 
     try {
-      const opcao = await select({
-        message: chalk.white("O que deseja fazer?"),
-        choices: MENU_PRINCIPAL,
+      const option = await select({
+        message: chalk.white("What would you like to do?"),
+        choices: MAIN_MENU,
       });
 
-      switch (opcao) {
-        case "sair":
-          console.log(chalk.hex("#4ECDC4")("\n  Ate mais! Portas seguras por aqui.\n"));
-          rodando = false;
+      switch (option) {
+        case "exit":
+          console.log(chalk.hex("#4ECDC4")("\n  Goodbye! Your ports are safe.\n"));
+          running = false;
           break;
 
-        case "listar":
-          await exibirListaPortas();
-          await pausar();
+        case "list":
+          await displayPortsList();
+          await pause();
           break;
 
-        case "matar":
-          await menuMatarPorta();
-          await pausar();
+        case "kill":
+          await killPortMenu();
+          await pause();
           break;
 
-        case "refresh":
-          await monitorRefresh();
+        case "monitor":
+          await monitorMode();
           break;
       }
     } catch (error) {
       if (error.name === "ExitPromptError") {
-        console.log(chalk.hex("#4ECDC4")("\n  Ate mais!\n"));
-        rodando = false;
+        console.log(chalk.hex("#4ECDC4")("\n  Goodbye!\n"));
+        running = false;
       } else {
-        console.log(chalk.red(`\n  Erro: ${error.message}\n`));
-        await pausar();
+        console.log(chalk.red(`\n  Error: ${error.message}\n`));
+        await pause();
       }
     }
   }
@@ -276,9 +278,9 @@ async function main() {
   process.exit(0);
 }
 
-function pausar() {
+function pause() {
   return new Promise((resolve) => {
-    console.log(chalk.gray("\n  Pressione qualquer tecla para continuar..."));
+    console.log(chalk.gray("\n  Press any key to continue..."));
 
     process.stdin.setRawMode(true);
     process.stdin.resume();
