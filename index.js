@@ -5,6 +5,14 @@ import { select, confirm } from "@inquirer/prompts";
 import Table from "cli-table3";
 import { listarPortas, matarPorta, infoProcesso } from "./port-scanner.js";
 import { criarSpinner } from "./spinner.js";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8"));
+const VERSION = pkg.version;
 
 const L1 = "    ____            __  _       __      __       __               ";
 const L2 = "   / __ \\____  ____/ /_| |     / /___ _/ /______/ /_  ___  _____  ";
@@ -54,7 +62,7 @@ function displayHeader() {
   console.log(chalk.gray("─".repeat(75)));
   console.log(
     chalk.white.bold("  PortWatcher ") +
-    chalk.hex("#96CEB4")("v1.0.0") +
+    chalk.hex("#96CEB4")(`v${VERSION}`) +
     chalk.gray("  |  System Port Monitor")
   );
   console.log(chalk.gray("─".repeat(75)));
@@ -219,7 +227,7 @@ async function monitorMode() {
     let output = ASCII_ART;
     output += chalk.gray("─".repeat(75)) + "\n";
     output += chalk.white.bold("  PortWatcher ") +
-      chalk.hex("#96CEB4")("v1.0.0") +
+      chalk.hex("#96CEB4")(`v${VERSION}`) +
       chalk.gray("  |  System Port Monitor") + "\n";
     output += chalk.gray("─".repeat(75)) + "\n\n";
     output += chalk.hex("#FFE66D").bold("  MONITOR MODE") + chalk.gray(" (updates every 2s) | Ctrl+C to exit\n\n");
