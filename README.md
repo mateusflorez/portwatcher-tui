@@ -47,6 +47,12 @@ sudo portwatcher
 - Node.js 18+
 - Linux (uses `ss`, `netstat`, `lsof`, `fuser`)
 
+## Screenshots
+
+![main-menu-screenshot](screenshots/image.png)
+![port-list-screenshot](screenshots/image-1.png)
+![process-kill-screenshot](screenshots/image-2.png)
+
 ## License
 
 MIT

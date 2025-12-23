@@ -206,29 +206,55 @@ async function killPortMenu() {
 }
 
 async function monitorMode() {
-  console.log(chalk.hex("#FFE66D")("\n  Monitor mode activated. Press Ctrl+C to exit.\n"));
+  // Enter alternate screen buffer for clean TUI experience
+  process.stdout.write('\x1B[?1049h');
+  // Hide cursor to prevent flicker
+  process.stdout.write('\x1B[?25l');
 
-  const interval = setInterval(async () => {
-    console.clear();
-    displayHeader();
-    console.log(chalk.hex("#FFE66D").bold("  MONITOR MODE") + chalk.gray(" (updates every 2s) | Ctrl+C to exit\n"));
+  const render = async () => {
+    // Move cursor to home position (0,0) instead of clearing
+    process.stdout.write('\x1B[H');
+
+    // Build output as a single string
+    let output = ASCII_ART;
+    output += chalk.gray("─".repeat(75)) + "\n";
+    output += chalk.white.bold("  PortWatcher ") +
+      chalk.hex("#96CEB4")("v1.0.0") +
+      chalk.gray("  |  System Port Monitor") + "\n";
+    output += chalk.gray("─".repeat(75)) + "\n\n";
+    output += chalk.hex("#FFE66D").bold("  MONITOR MODE") + chalk.gray(" (updates every 2s) | Ctrl+C to exit\n\n");
 
     try {
       const ports = await listarPortas();
       const table = createPortsTable(ports);
-      console.log(table.toString());
-      console.log(chalk.gray(`\n  Last update: ${new Date().toLocaleTimeString()}`));
+      output += table.toString() + "\n";
+      output += chalk.gray(`\n  Last update: ${new Date().toLocaleTimeString()}`);
     } catch (error) {
-      console.log(chalk.red(`  Error: ${error.message}`));
+      output += chalk.red(`  Error: ${error.message}`);
     }
-  }, 2000);
+
+    // Clear from cursor to end of screen and write output
+    process.stdout.write('\x1B[J');
+    process.stdout.write(output);
+  };
+
+  // Initial render
+  await render();
+
+  const interval = setInterval(render, 2000);
 
   // Wait for Ctrl+C
   await new Promise((resolve) => {
-    process.on("SIGINT", () => {
+    const cleanup = () => {
       clearInterval(interval);
+      // Show cursor again
+      process.stdout.write('\x1B[?25h');
+      // Exit alternate screen buffer
+      process.stdout.write('\x1B[?1049l');
       resolve();
-    });
+    };
+
+    process.on("SIGINT", cleanup);
   });
 }
 
